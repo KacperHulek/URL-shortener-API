@@ -1,12 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using URL_shortener_API.Dtos;
 using URL_shortener_API.Models;
+using URL_shortener_API.Helpers;
+using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Cors;
 
 namespace URL_shortener_API.Controllers
 {
@@ -15,7 +13,7 @@ namespace URL_shortener_API.Controllers
     public class UrlShortenerController : Controller
     {
         private readonly UrlShortenerContext _context;
-        private readonly string _baseUrl = "http://localhost:5017/";
+        private readonly string _baseUrl = "https://localhost:7143/";
 
         public UrlShortenerController(UrlShortenerContext context)
         {
@@ -30,22 +28,28 @@ namespace URL_shortener_API.Controllers
                 return BadRequest("The URL cannot be empty.");
             }
 
+            if (!System.Uri.IsWellFormedUriString(request.OriginalUrl, UriKind.RelativeOrAbsolute))
+            {
+                return BadRequest("Invalid URL format. Please provide a valid URL.");
+            }
+
             var existingUrl = _context.ShortUrls.FirstOrDefault(u =>
                 u.OriginalUrl == request.OriginalUrl
             );
+
             if (existingUrl != null)
             {
                 return Ok(
                     new UrlShortenResponseDto
                     {
                         Id = existingUrl.Id,
-                        ShortUrl = $"{_baseUrl}{existingUrl.ShortCode}",
+                        ShortCode = existingUrl.ShortCode,
                         OriginalUrl = existingUrl.OriginalUrl,
                     }
                 );
             }
 
-            var shortCode = GenerateShortCode();
+            var shortCode = CodeGenerator.GenerateShortCode();
 
             var shortUrl = new ShortUrl
             {
@@ -59,23 +63,13 @@ namespace URL_shortener_API.Controllers
             return Ok(
                 new UrlShortenResponseDto
                 {
-                    ShortUrl = $"{_baseUrl}{shortCode}",
+                    ShortCode = shortCode,
                     OriginalUrl = shortUrl.OriginalUrl,
                     Id = shortUrl.Id,
                 }
             );
         }
 
-        private string GenerateShortCode()
-        {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-            var random = new Random();
-            return new string(
-                Enumerable.Repeat(chars, 6).Select(s => s[random.Next(s.Length)]).ToArray()
-            );
-        }
-
-        // Get: /{shortCode}
         [HttpGet("{shortCode}")]
         public IActionResult RedirectToOriginalUrl(string shortCode)
         {
@@ -89,6 +83,18 @@ namespace URL_shortener_API.Controllers
 
             // Redirect to the original URL
             return Redirect(shortUrl.OriginalUrl);
+        }
+
+        [HttpGet("getAllUrls")]
+        public IActionResult GetAll()
+        {
+            var urls = _context.ShortUrls.Select(u => new UrlShortenResponseDto
+            {
+                Id = u.Id,
+                OriginalUrl = u.OriginalUrl,
+                ShortCode = u.ShortCode
+            }).ToList();
+            return Ok(urls);
         }
     }
 }
