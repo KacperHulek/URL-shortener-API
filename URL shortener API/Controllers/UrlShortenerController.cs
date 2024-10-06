@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using URL_shortener_API.Dtos;
 using URL_shortener_API.Models;
 
 namespace URL_shortener_API.Controllers
@@ -14,6 +15,7 @@ namespace URL_shortener_API.Controllers
     public class UrlShortenerController : Controller
     {
         private readonly UrlShortenerContext _context;
+        private readonly string _baseUrl = "http://localhost:5017/";
 
         public UrlShortenerController(UrlShortenerContext context)
         {
@@ -21,27 +23,47 @@ namespace URL_shortener_API.Controllers
         }
 
         [HttpPost("shortenUrl")]
-        public async Task<IActionResult> ShortenUrl([FromBody] string originalUrl)
+        public async Task<IActionResult> ShortenUrl([FromBody] UrlShortenRequestDto request)
         {
-            if (string.IsNullOrWhiteSpace(originalUrl))
+            if (string.IsNullOrWhiteSpace(request.OriginalUrl))
             {
                 return BadRequest("The URL cannot be empty.");
             }
 
-            var existingUrl = _context.ShortUrls.FirstOrDefault(u => u.OriginalUrl == originalUrl);
+            var existingUrl = _context.ShortUrls.FirstOrDefault(u =>
+                u.OriginalUrl == request.OriginalUrl
+            );
             if (existingUrl != null)
             {
-                return Ok(new { shortUrl = $"https://localhost:5001/{existingUrl.ShortCode}" });
+                return Ok(
+                    new UrlShortenResponseDto
+                    {
+                        Id = existingUrl.Id,
+                        ShortUrl = $"{_baseUrl}{existingUrl.ShortCode}",
+                        OriginalUrl = existingUrl.OriginalUrl,
+                    }
+                );
             }
 
             var shortCode = GenerateShortCode();
 
-            var shortUrl = new ShortUrl { OriginalUrl = originalUrl, ShortCode = shortCode };
+            var shortUrl = new ShortUrl
+            {
+                OriginalUrl = request.OriginalUrl,
+                ShortCode = shortCode,
+            };
 
             _context.ShortUrls.Add(shortUrl);
             await _context.SaveChangesAsync();
 
-            return Ok(new { shortUrl = $"https://localhost:5001/{shortCode}" });
+            return Ok(
+                new UrlShortenResponseDto
+                {
+                    ShortUrl = $"{_baseUrl}{shortCode}",
+                    OriginalUrl = shortUrl.OriginalUrl,
+                    Id = shortUrl.Id,
+                }
+            );
         }
 
         private string GenerateShortCode()
