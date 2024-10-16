@@ -11,7 +11,7 @@ namespace URL_shortener_API.Controllers
 {
     [Route("api/UrlShortener")]
     [ApiController]
-    public class UrlShortenerController : Controller
+    public class UrlShortenerController : ControllerBase
     {
         private readonly ApplicationDBContext _context;
         private readonly string _baseUrl = "https://localhost:7143/";
