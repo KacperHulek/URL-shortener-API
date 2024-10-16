@@ -5,6 +5,7 @@ using URL_shortener_API.Models;
 using URL_shortener_API.Helpers;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Cors;
+using URL_shortener_API.Data;
 
 namespace URL_shortener_API.Controllers
 {
@@ -12,10 +13,10 @@ namespace URL_shortener_API.Controllers
     [ApiController]
     public class UrlShortenerController : Controller
     {
-        private readonly UrlShortenerContext _context;
+        private readonly ApplicationDBContext _context;
         private readonly string _baseUrl = "https://localhost:7143/";
 
-        public UrlShortenerController(UrlShortenerContext context)
+        public UrlShortenerController(ApplicationDBContext context)
         {
             _context = context;
         }

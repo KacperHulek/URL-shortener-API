@@ -4,13 +4,14 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using URL_shortener_API.Models;
+using URL_shortener_API.Data;
+
 
 #nullable disable
 
 namespace URL_shortener_API.Migrations
 {
-    [DbContext(typeof(UrlShortenerContext))]
+    [DbContext(typeof(ApplicationDBContext))]
     [Migration("20241007194952_InitialCreate")]
     partial class InitialCreate
     {
