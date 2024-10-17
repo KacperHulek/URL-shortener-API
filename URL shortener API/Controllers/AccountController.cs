@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using URL_shortener_API.Dtos.Account;
+using URL_shortener_API.Interfaces;
 using URL_shortener_API.Models;
 
 namespace URL_shortener_API.Controllers
@@ -10,9 +11,12 @@ namespace URL_shortener_API.Controllers
     public class AccountController : ControllerBase
     {
         private readonly UserManager<AppUser> _userManager;
-        public AccountController(UserManager<AppUser> userManager)
+        private readonly ITokenService _tokenService;
+        public AccountController(UserManager<AppUser> userManager, ITokenService tokenService)
         {
             _userManager = userManager;
+            _tokenService = tokenService;
+
         }
 
         [HttpPost("register")]
@@ -33,7 +37,13 @@ namespace URL_shortener_API.Controllers
                     var roleResult = await _userManager.AddToRoleAsync(appUser, "User");
                     if (roleResult.Succeeded)
                     {
-                        return Ok("User created");
+                        return Ok(
+                            new NewUserDto
+                            {
+                                Email = appUser.Email,
+                                Token = _tokenService.CreateToken(appUser)
+                            }
+                            );
                     }
                     else
                     {

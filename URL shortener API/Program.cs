@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using URL_shortener_API.Data;
+using URL_shortener_API.Interfaces;
 using URL_shortener_API.Models;
+using URL_shortener_API.Service;
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
@@ -66,6 +68,8 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddScoped<ITokenService, TokenService>();
 
 var app = builder.Build();
 
