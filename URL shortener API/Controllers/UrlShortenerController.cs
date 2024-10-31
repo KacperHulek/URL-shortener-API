@@ -6,6 +6,7 @@ using URL_shortener_API.Helpers;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Cors;
 using URL_shortener_API.Data;
+using URL_shortener_API.Interfaces;
 
 namespace URL_shortener_API.Controllers
 {
@@ -14,11 +15,13 @@ namespace URL_shortener_API.Controllers
     public class UrlShortenerController : ControllerBase
     {
         private readonly ApplicationDBContext _context;
+        private readonly IUrlRepository _urlRepository;
         private readonly string _baseUrl = "https://localhost:7143/";
 
-        public UrlShortenerController(ApplicationDBContext context)
+        public UrlShortenerController(ApplicationDBContext context, IUrlRepository urlRepository)
         {
             _context = context;
+            _urlRepository = urlRepository;
         }
 
         [HttpPost("shortenUrl")]
@@ -34,41 +37,9 @@ namespace URL_shortener_API.Controllers
                 return BadRequest("Invalid URL format. Please provide a valid URL.");
             }
 
-            var existingUrl = _context.ShortUrls.FirstOrDefault(u =>
-                u.OriginalUrl == request.OriginalUrl
-            );
+            var response = await _urlRepository.ShortenUrlAsync(request);
 
-            if (existingUrl != null)
-            {
-                return Ok(
-                    new UrlShortenResponseDto
-                    {
-                        Id = existingUrl.Id,
-                        ShortCode = existingUrl.ShortCode,
-                        OriginalUrl = existingUrl.OriginalUrl,
-                    }
-                );
-            }
-
-            var shortCode = CodeGenerator.GenerateShortCode();
-
-            var shortUrl = new ShortUrl
-            {
-                OriginalUrl = request.OriginalUrl,
-                ShortCode = shortCode,
-            };
-
-            _context.ShortUrls.Add(shortUrl);
-            await _context.SaveChangesAsync();
-
-            return Ok(
-                new UrlShortenResponseDto
-                {
-                    ShortCode = shortCode,
-                    OriginalUrl = shortUrl.OriginalUrl,
-                    Id = shortUrl.Id,
-                }
-            );
+            return Ok(response);
         }
 
         [HttpGet("{shortCode}")]

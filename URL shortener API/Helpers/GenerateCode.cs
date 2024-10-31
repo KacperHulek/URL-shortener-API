@@ -2,7 +2,7 @@
 {
     public class CodeGenerator
     {
-        public static string GenerateShortCode()
+        public string GenerateShortCode()
         {
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
             var random = new Random();

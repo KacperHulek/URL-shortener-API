@@ -4,8 +4,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using URL_shortener_API.Data;
+using URL_shortener_API.Helpers;
 using URL_shortener_API.Interfaces;
 using URL_shortener_API.Models;
+using URL_shortener_API.Repository;
 using URL_shortener_API.Service;
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
@@ -97,6 +99,8 @@ builder.Services.AddSwaggerGen(option =>
 });
 
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IUrlRepository, UrlRepository>();
+builder.Services.AddScoped<CodeGenerator>();
 
 var app = builder.Build();
 
